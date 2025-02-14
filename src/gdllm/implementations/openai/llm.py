@@ -15,15 +15,14 @@ class OpenAI(AbstractLLM, AbstractToolUser, AbstractStructuredOutputer):
     def __init__(self, config: OpenAIConfig):
         self.config = config
         self.client = BaseOpenAI(api_key=config.api_key, base_url=config.base_url)
-        self.tool_provider = OpenAIToolProvider()
 
     def get_chat_response(self, messages: List[AbstractOpenAIMessage]) -> AbstractOpenAIMessage:
         parsed_messages = [message.to_chat_message() for message in messages]
 
         response = self.client.chat.completions.create(
-            model=self.cfg.model,
+            model=self.config.model,
             messages=parsed_messages,
-            **self.cfg.get_call_args()
+            **self.config.get_call_args()
         )
 
         return self.process_response(response.choices[0])
@@ -41,7 +40,7 @@ class OpenAI(AbstractLLM, AbstractToolUser, AbstractStructuredOutputer):
         results = []
         for tool_call in tool_call_response['tool_calls']:
             func, args = tool_call['function']['name'], json.loads(tool_call['function']['arguments'])
-            result = self.tool_provider.use_tool(func, args)
+            result = OpenAIToolProvider.use_tool(func, args)
 
             results.append(OpenAIToolResultResponse(tool_call['id'], result))
         return results
@@ -51,10 +50,10 @@ class OpenAI(AbstractLLM, AbstractToolUser, AbstractStructuredOutputer):
 
     def structured_output(self, message: str, output_type: T) -> T:
         structured_response = self.client.beta.chat.completions.parse(
-            model = self.cfg.model,
-            prompt = message,
+            model = self.config.model,
+            messages = [self.format_user_message(message).to_chat_message()],
             response_format=output_type,
-            **self.cfg.get_call_args()
+            **self.config.get_call_args()
         )
 
         return structured_response.choices[0].parsed

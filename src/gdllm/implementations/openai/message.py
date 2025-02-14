@@ -15,6 +15,9 @@ class OpenAIMessage(AbstractOpenAIMessage):
     
     def to_chat_message(self) -> dict:
         return {"role": self.role, "content": self.message}
+    
+    def print(self):
+        return "Role: " + self.role + "\nContent: " + self.message
 
 class OpenAIResponse(AbstractOpenAIMessage):
     def __init__(self, response):
@@ -22,6 +25,9 @@ class OpenAIResponse(AbstractOpenAIMessage):
     
     def to_chat_message(self) -> dict:
         return {"role": "assistant", "content": self.response.message.content}
+    
+    def print(self):
+        return "Role: assistant\nContent: " + self.response.message.content
     
 class OpenAIToolResponse(AbstractOpenAIMessage):
     def __init__(self, response):
@@ -38,6 +44,9 @@ class OpenAIToolResponse(AbstractOpenAIMessage):
                     "type":"function"} for tc in self.response.message.tool_calls],
                 }
     
+    def print(self):
+        return "Role: assistant\nTool calls: " + str(self.response.message.tool_calls)
+    
 class OpenAIToolResultResponse(AbstractOpenAIMessage):
     def __init__(self, id, result):
         self.id = id
@@ -47,3 +56,7 @@ class OpenAIToolResultResponse(AbstractOpenAIMessage):
         return {"role": "tool", 
                 "tool_call_id": self.id,
                 "content": json.dumps(self.result)}
+    
+    def print(self):
+        return "Role: tool\nTool call ID: " + self.id + "\nContent: " + json.dumps(self.result)
+    
