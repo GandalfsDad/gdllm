@@ -1,7 +1,7 @@
 from ...abstract import AbstractConfig
 from .tool import OpenAIToolProvider
 
-from typing import List, Any, Optional
+from typing import List
 from abc import ABC, abstractmethod
 
 class OpenAIConfig(AbstractConfig, ABC):
@@ -9,7 +9,7 @@ class OpenAIConfig(AbstractConfig, ABC):
     base_url: str = 'https://api.openai.com/v1'
     api_key: str
     model: str
-    tools: List[Any] = []
+    tools: List[str] = []
 
     @abstractmethod
     def get_call_args(self) -> dict:
