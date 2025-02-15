@@ -104,8 +104,8 @@ class TestAnthropicLLM(unittest.TestCase):
     
     def test_format_user_message(self):
         result = self.llm.format_user_message("Hello")
-        self.assertEqual(result["role"], "user")
-        self.assertEqual(result["content"], "Hello")
+        self.assertEqual(result.role, "user")
+        self.assertEqual(result.message, "Hello")
 
     def test_process_tool_calls(self):
         tool_response = {
