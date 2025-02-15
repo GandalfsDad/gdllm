@@ -33,7 +33,15 @@ class TestAnthropicMessage(unittest.TestCase):
         
         self.assertEqual(chat_message["role"], "user")
         self.assertEqual(chat_message["content"], "Hello")
-        self.assertEqual(message.print(), "Role: user\nContent: Hello")
+        
+        # Test print() by capturing stdout
+        from io import StringIO
+        import sys
+        stdout = StringIO()
+        sys.stdout = stdout
+        message.print()
+        sys.stdout = sys.__stdout__
+        self.assertEqual(stdout.getvalue().strip(), "Role: user\nContent: Hello")
     
     def test_anthropic_response(self):
         mock_content = MagicMock()
