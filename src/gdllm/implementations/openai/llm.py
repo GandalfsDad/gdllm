@@ -1,4 +1,4 @@
-from ...abstract import AbstractLLM, AbstractMessage, AbstractToolUser, AbstractStructuredOutputer
+from ...abstract import AbstractLLM, AbstractMessage, AbstractToolUser, AbstractStructuredOutputer, AbstractTokenCounter
 from .config import OpenAIConfig
 from .message import AbstractOpenAIMessage, OpenAIToolResponse, OpenAIResponse, OpenAIMessage, OpenAIToolResultResponse
 from .tool import OpenAIToolProvider
@@ -11,10 +11,17 @@ from openai import OpenAI as BaseOpenAI
 T = TypeVar('T')
 
 
-class OpenAI(AbstractLLM, AbstractToolUser, AbstractStructuredOutputer):
+class OpenAI(AbstractLLM, AbstractToolUser, AbstractStructuredOutputer, AbstractTokenCounter):
     def __init__(self, config: OpenAIConfig):
         self.config = config
         self.client = BaseOpenAI(api_key=config.api_key, base_url=config.base_url)
+
+        self.__tokens = {
+            "input": 0,
+            "output": 0,
+            "cached_input": 0,
+            "reasoning": 0
+        }
 
     def get_chat_response(self, messages: List[AbstractOpenAIMessage]) -> AbstractOpenAIMessage:
         parsed_messages = [message.to_chat_message() for message in messages]
@@ -24,6 +31,8 @@ class OpenAI(AbstractLLM, AbstractToolUser, AbstractStructuredOutputer):
             messages=parsed_messages,
             **self.config.get_call_args()
         )
+
+        self.update_token_usage(response.usage)
 
         return self.process_response(response.choices[0])
     
@@ -56,4 +65,22 @@ class OpenAI(AbstractLLM, AbstractToolUser, AbstractStructuredOutputer):
             **self.config.get_call_args()
         )
 
-        return structured_response.choices[0].parsed
+        self.update_token_usage(structured_response.usage)
+
+        return structured_response.choices[0].message.parsed
+    
+    def update_token_usage(self, usage):
+        
+        self.__tokens["input"] += usage.prompt_tokens
+
+        if hasattr(usage, "completion_tokens"):
+            self.__tokens["output"] += usage.completion_tokens
+
+        if hasattr(usage, "prompt_tokens_details"):
+            self.__tokens["cached_input"] += usage.prompt_tokens_details.cached_tokens
+        
+        if hasattr(usage, "completion_tokens_details"):
+            self.__tokens["reasoning"] += usage.completion_tokens_details.reasoning_tokens
+    
+    def token_usage(self) -> dict:
+        return self.__tokens

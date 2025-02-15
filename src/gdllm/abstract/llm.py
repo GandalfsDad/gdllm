@@ -28,3 +28,8 @@ class AbstractStructuredOutputer(ABC):
     @abstractmethod
     def structured_output(self, message: str, output_type: T) -> T:
         pass
+
+class AbstractTokenCounter(ABC):
+    @abstractmethod
+    def token_usage(self) -> dict:
+        pass
