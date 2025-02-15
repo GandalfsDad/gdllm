@@ -124,15 +124,19 @@ class TestOpenAILLM(unittest.TestCase):
     def test_process_tool_calls(self, mock_use_tool):
         mock_use_tool.return_value = {"result": "success"}
         
-        tool_response = {
-            'tool_calls': [{
-                'id': 'call_123',
-                'function': {
-                    'name': 'test_tool',
-                    'arguments': '{"arg": "value"}'
-                }
-            }]
-        }
+        # Create a proper mock response object
+        mock_tool_call = MagicMock()
+        mock_tool_call.id = 'call_123'
+        mock_tool_call.function.name = 'test_tool'
+        mock_tool_call.function.arguments = '{"arg": "value"}'
+        
+        mock_message = MagicMock()
+        mock_message.tool_calls = [mock_tool_call]
+        
+        mock_response = MagicMock()
+        mock_response.message = mock_message
+        
+        tool_response = OpenAIToolResponse(mock_response)
         
         results = self.llm.process_tool_calls(tool_response)
         self.assertEqual(len(results), 1)

@@ -108,16 +108,21 @@ class TestAnthropicLLM(unittest.TestCase):
         self.assertEqual(result.message, "Hello")
 
     def test_process_tool_calls(self):
-        tool_response = {
-            'content': [
-                {
-                    'type': 'tool_use',
-                    'id': 'call_123',
-                    'name': 'test_tool',
-                    'input': {'arg': 'value'}
-                }
-            ]
-        }
+        # Create a proper mock response object
+        mock_content_text = MagicMock()
+        mock_content_text.type = "text"
+        mock_content_text.text = "Thinking about using a tool"
+        
+        mock_content_tool = MagicMock()
+        mock_content_tool.type = "tool_use"
+        mock_content_tool.id = "call_123"
+        mock_content_tool.name = "test_tool"
+        mock_content_tool.input = {"arg": "value"}
+        
+        mock_response = MagicMock()
+        mock_response.content = [mock_content_text, mock_content_tool]
+        
+        tool_response = AnthropicToolResponse(mock_response)
         
         with patch('src.gdllm.implementations.anthropic.tool.AnthropicToolProvider.use_tool') as mock_use_tool:
             mock_use_tool.return_value = {"result": "success"}
