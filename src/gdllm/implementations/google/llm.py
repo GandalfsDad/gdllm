@@ -38,6 +38,10 @@ class Google(AbstractLLM, AbstractToolUser, AbstractStructuredOutputer):
     def process_tool_calls(self, tool_call_response: GoogleToolResponse) -> List[GoogleToolResultResponse]:
         results = []
         for tool_call in tool_call_response.response.content.parts:
+            #sometimes tool call brins out an extrs text response (discarded)
+            if tool_call.function_call is None:
+                continue
+
             func = tool_call.function_call.name
             args = {k:v for k,v in tool_call.function_call.args.items()}
             result = GoogleToolProvider.use_tool(func, args)
