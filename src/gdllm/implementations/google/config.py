@@ -26,7 +26,7 @@ class GoogleGPTConfig(GoogleConfig):
         }
 
         if self.tools:
-            args["tools"]= GoogleToolProvider.parse_tools(self.tools),
+            args["tools"]= GoogleToolProvider.parse_tools(self.tools)
             args["automatic_function_calling"]= {"disable": True, "maximum_remote_calls": 0}
 
         return args

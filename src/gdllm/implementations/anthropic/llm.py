@@ -33,7 +33,7 @@ class Anthropic(AbstractLLM, AbstractToolUser):
             return AnthropicResponse(response.content[0])
     
     def format_user_message(self, message: str) -> Any:
-        return {"role": "user", "content": message}
+        return AnthropicMessage(role="user", message= message)
     
     def process_tool_calls(self, tool_call_response: AbstractAnthropicMessage) -> List[AbstractAnthropicMessage]:
         results = []

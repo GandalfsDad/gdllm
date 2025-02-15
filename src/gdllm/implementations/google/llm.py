@@ -5,14 +5,14 @@ from .tool import GoogleToolProvider
 
 from typing import List, TypeVar, Any
 
-from google import genai
+from google import genai as google_genai
 
 T = TypeVar('T')
 
 class Google(AbstractLLM, AbstractToolUser, AbstractStructuredOutputer):
     def __init__(self, config: GoogleConfig):
         self.config = config
-        self.client = genai.Client(api_key=self.config.api_key)#genai.GenerativeModel(self.config.model, tools = GoogleToolProvider.parse_tools(self.config.tools))
+        self.client = google_genai.Client(api_key=self.config.api_key)
         
     def get_chat_response(self, messages: List[AbstractGoogleMessage]) -> AbstractGoogleMessage:
         parsed_messages = [message.to_chat_message() for message in messages]
