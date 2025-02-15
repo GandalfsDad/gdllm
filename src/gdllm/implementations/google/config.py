@@ -16,17 +16,22 @@ class GoogleConfig(AbstractConfig, ABC):
 
 
 class GoogleGPTConfig(GoogleConfig):
+    temperature: float = 0.5
+    max_output_tokens: int = 1024
 
     def get_call_args(self) -> dict:
-        if self.tools:
-            return {
-                "tools": GoogleToolProvider.parse_tools(self.tools),
-                "automatic_function_calling": {"disable": True, "maximum_remote_calls": 0}
-            }
-        else:
-            return {}
+        args = {
+            "temperature": self.temperature,
+            "max_output_tokens": self.max_output_tokens
+        }
 
-class GoogleAIReasoningConfig(GoogleConfig):
+        if self.tools:
+            args["tools"]= GoogleToolProvider.parse_tools(self.tools),
+            args["automatic_function_calling"]= {"disable": True, "maximum_remote_calls": 0}
+
+        return args
+
+class GoogleReasoningConfig(GoogleConfig):
 
     def get_call_args(self) -> dict:
         if self.tools:

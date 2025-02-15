@@ -17,7 +17,7 @@ class GoogleMessage(AbstractGoogleMessage):
         return {"role": self.role, "parts": [self.message]}
     
     def print(self):
-        return "Role: " + self.role + "\Parts: " + self.message
+        return "Role: " + self.role + "\nParts: " + self.message
 
 class GoogleResponse(AbstractGoogleMessage):
     def __init__(self, response):
