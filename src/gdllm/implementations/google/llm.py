@@ -23,12 +23,11 @@ class Google(AbstractLLM, AbstractToolUser, AbstractStructuredOutputer):
             config= self.config.get_call_args()
         )
 
-
-        response = chat.send_message(parsed_messages[-1]['parts'])
+        response = chat.send_message(parsed_messages[-1])
         return self.process_response(response.candidates[0])
     
     def process_response(self, response: Any) -> AbstractGoogleMessage:
-        if response.content.parts[0].function_call:
+        if response.content.parts[0].function_call is not None:
             return GoogleToolResponse(response)
         else:
             return GoogleResponse(response)

@@ -17,7 +17,7 @@ class AnthropicMessage(AbstractAnthropicMessage):
         return {"role": self.role, "content": self.message}
     
     def print(self):
-        return "Role: " + self.role + "\nContent: " + self.message
+        print("Role: " + self.role + "\nContent: " + self.message)
 
 class AnthropicResponse(AbstractAnthropicMessage):
     def __init__(self, response):
@@ -27,7 +27,7 @@ class AnthropicResponse(AbstractAnthropicMessage):
         return {"role": "assistant", "content": self.response.text}
     
     def print(self):
-        return "Role: assistant\nContent: " + self.response.text
+        print("Role: assistant\nContent: " + self.response.text)
     
 class AnthropicToolResponse(AbstractAnthropicMessage):
     def __init__(self, response):
@@ -50,7 +50,7 @@ class AnthropicToolResponse(AbstractAnthropicMessage):
                 }
     
     def print(self):
-        return print("Role: assistant\nTool use: " + str(self.response.content[1]))
+        print(f"Role: assistant\nContent: {self.response.content[0].text}\nTool use: {str(self.response.content[1])}")
 
 class AnthropicToolResultResponse(AbstractAnthropicMessage):
     def __init__(self, id, result):
@@ -67,4 +67,4 @@ class AnthropicToolResultResponse(AbstractAnthropicMessage):
                 }
     
     def print(self):
-        return print("Role: user\nTool result: " + str(self.result))
+        print("Role: user\nTool result: " + str(self.result))

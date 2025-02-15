@@ -3,6 +3,8 @@ from abc import ABC, abstractmethod
 
 from ...abstract import AbstractMessage
 
+from google.genai import types as google_types
+
 class AbstractGoogleMessage(AbstractMessage, ABC):
     @abstractmethod
     def to_chat_message(self) -> dict:
@@ -14,32 +16,30 @@ class GoogleMessage(AbstractGoogleMessage):
         self.role = role
     
     def to_chat_message(self) -> dict:
-        return {"role": self.role, "parts": [self.message]}
+        return google_types.Content(role= self.role, parts=[google_types.Part(text=self.message)])
     
     def print(self):
-        return "Role: " + self.role + "\nParts: " + self.message
+        print("Role: " + self.role + "\nParts: " + self.message)
 
 class GoogleResponse(AbstractGoogleMessage):
     def __init__(self, response):
         self.response = response
     
     def to_chat_message(self) -> dict:
-        return {"role": "model", "parts": self.response.content.parts}
+        return google_types.Content(role= 'model', parts=[google_types.Part(text=self.response.content.parts[0].text)])
     
     def print(self):
-        return "Role: model\nParts: " + str(self.response.content.parts)
+        print("Role: model\nParts: " + self.response.content.parts[0].text)
     
 class GoogleToolResponse(AbstractGoogleMessage):
     def __init__(self, response):
         self.response = response
     
     def to_chat_message(self) -> dict:
-        return {"role": "model", 
-                "parts": self.response.content.parts,
-                }
-    
+        return google_types.Content(role= 'model', parts=[google_types.Part(function_call=self.response.content.parts[0].function_call)])
+
     def print(self):
-        return "Role: model\nParts: " + str(self.response.content.parts)
+        print("Role: model\nParts: " + str(self.response.content.parts[0].function_call))
     
 class GoogleToolResultResponse(AbstractGoogleMessage):
     def __init__(self, func, result):
@@ -47,15 +47,7 @@ class GoogleToolResultResponse(AbstractGoogleMessage):
         self.result = result
     
     def to_chat_message(self) -> dict:
-        return {
-            "role": "model",
-            "parts": [{
-                "function_response": {
-                    "name": self.func,
-                    "response": {"result":self.result}
-                }
-            }]
-        }
+        return google_types.Content(role= 'model',parts=[google_types.Part(function_response=google_types.FunctionResponse(name=self.func, response={"result":self.result}))])
     
     def print(self):
-        return "Role: model\nFunction: " + self.func + "\nResult: " + str(self.result)
+        print("Role: model\nFunction: " + self.func + "\nResult: " + str(self.result))

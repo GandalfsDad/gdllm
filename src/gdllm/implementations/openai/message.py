@@ -17,7 +17,7 @@ class OpenAIMessage(AbstractOpenAIMessage):
         return {"role": self.role, "content": self.message}
     
     def print(self):
-        return "Role: " + self.role + "\nContent: " + self.message
+        print("Role: " + self.role + "\nContent: " + self.message)
 
 class OpenAIResponse(AbstractOpenAIMessage):
     def __init__(self, response):
@@ -27,7 +27,7 @@ class OpenAIResponse(AbstractOpenAIMessage):
         return {"role": "assistant", "content": self.response.message.content}
     
     def print(self):
-        return "Role: assistant\nContent: " + self.response.message.content
+        print("Role: assistant\nContent: " + self.response.message.content)
     
 class OpenAIToolResponse(AbstractOpenAIMessage):
     def __init__(self, response):
@@ -45,7 +45,7 @@ class OpenAIToolResponse(AbstractOpenAIMessage):
                 }
     
     def print(self):
-        return "Role: assistant\nTool calls: " + str(self.response.message.tool_calls)
+        print("Role: assistant\nTool calls: " + str(self.response.message.tool_calls))
     
 class OpenAIToolResultResponse(AbstractOpenAIMessage):
     def __init__(self, id, result):
@@ -58,5 +58,5 @@ class OpenAIToolResultResponse(AbstractOpenAIMessage):
                 "content": json.dumps(self.result)}
     
     def print(self):
-        return "Role: tool\nTool call ID: " + self.id + "\nContent: " + json.dumps(self.result)
+        print("Role: tool\nTool call ID: " + self.id + "\nContent: " + json.dumps(self.result))
     

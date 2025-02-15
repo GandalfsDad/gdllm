@@ -38,11 +38,11 @@ class OpenAI(AbstractLLM, AbstractToolUser, AbstractStructuredOutputer):
 
     def process_tool_calls(self, tool_call_response: OpenAIToolResponse) -> List[OpenAIToolResultResponse]:
         results = []
-        for tool_call in tool_call_response['tool_calls']:
-            func, args = tool_call['function']['name'], json.loads(tool_call['function']['arguments'])
+        for tool_call in tool_call_response.response.message.tool_calls:
+            func, args = tool_call.function.name, json.loads(tool_call.function.arguments)
             result = OpenAIToolProvider.use_tool(func, args)
 
-            results.append(OpenAIToolResultResponse(tool_call['id'], result))
+            results.append(OpenAIToolResultResponse(tool_call.id, result))
         return results
 
     def check_tool_use(self, message: AbstractMessage) -> bool:

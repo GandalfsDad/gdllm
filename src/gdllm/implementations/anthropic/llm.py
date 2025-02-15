@@ -38,11 +38,11 @@ class Anthropic(AbstractLLM, AbstractToolUser):
     def process_tool_calls(self, tool_call_response: AbstractAnthropicMessage) -> List[AbstractAnthropicMessage]:
         results = []
 
-        for content in tool_call_response['content']:
-            if content['type'] == 'tool_use':
-                func, args = content['name'], content['input']
+        for content in tool_call_response.response.content:
+            if content.type == 'tool_use':
+                func, args = content.name, content.input
                 result = AnthropicToolProvider.use_tool(func, args)
-                results.append(AnthropicToolResultResponse(content['id'], result))
+                results.append(AnthropicToolResultResponse(content.id, result))
 
         return results
     
