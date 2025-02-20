@@ -14,6 +14,14 @@ class GoogleConfig(AbstractConfig, ABC):
     def get_call_args(self) -> dict:
         pass
 
+    @abstractmethod
+    def tool_use_available(self) -> bool:
+        pass
+
+    @abstractmethod
+    def structured_output_available(self) -> bool:
+        pass
+
 
 class GoogleGPTConfig(GoogleConfig):
     temperature: float = 0.5
@@ -30,12 +38,23 @@ class GoogleGPTConfig(GoogleConfig):
             args["automatic_function_calling"]= {"disable": True, "maximum_remote_calls": 0}
 
         return args
+    
+    def tool_use_available(self) -> bool:
+        return True
+    
+    def structured_output_available(self) -> bool:
+        return True
 
 class GoogleReasoningConfig(GoogleConfig):
 
     def get_call_args(self) -> dict:
         if self.tools:
             return {
-                "tools": GoogleToolProvider.parse_tools(self.tools),
                 "automatic_function_calling": {"disable": True, "maximum_remote_calls": 0}
             }
+        
+    def tool_use_available(self) -> bool:
+        return False
+    
+    def structured_output_available(self) -> bool:
+        return False
