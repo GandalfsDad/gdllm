@@ -32,10 +32,9 @@ jobs:
       - name: Install dependencies
         run: |
           uv pip install --system build
-          uv pip sync uv.lock
 
       - name: Build package
-        run: python -m build
+        run: uv build
 
       - name: Publish to PyPI Test
         if: github.ref != 'refs/heads/main'
