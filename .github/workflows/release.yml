@@ -1,0 +1,138 @@
+name: Publish
+on:
+  push:
+    branches:
+      - develop
+      - main
+      - feature/release.yml
+permissions:
+  contents: write
+
+jobs:
+  build-develop:
+    runs-on: ubuntu-latest
+    environment: test
+    if: github.ref != 'refs/heads/main'
+    outputs:
+      version: ${{ steps.get_release_name.outputs.version }}
+      tag_exists: ${{ steps.get_release_name.outputs.tag_exists }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+            python-version: "3.12"
+
+      - name: Install uv
+        run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Install dependencies
+        run: |
+          uv pip install --system build
+          uv pip sync uv.lock
+
+      - name: Build package
+        run: python -m build
+
+      - name: Publish to PyPI Test
+        if: github.ref != 'refs/heads/main'
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          skip-existing: true
+          repository-url: https://test.pypi.org/legacy/
+          password: ${{ secrets.PYPI_TEST_TOKEN }}
+
+      - name: Get release Name
+        id: get_release_name
+        run: |
+          git fetch --tags
+          echo "version=$(python setup.py --version)-test" >> $GITHUB_OUTPUT
+          if git rev-parse "$(python setup.py --version)-test" >/dev/null 2>&1; then
+            echo "tag_exists=true" >> $GITHUB_OUTPUT
+            echo "The tag exists"
+          else
+            echo "tag_exists=false" >> $GITHUB_OUTPUT
+            echo "The tag does not exist"
+          fi
+          
+      - name: Tag commit
+        if: ${{ steps.get_release_name.outputs.tag_exists == 'false' }}
+        run: |
+          git tag ${{ steps.get_release_name.outputs.version }}
+          git push origin ${{ steps.get_release_name.outputs.version }}
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        if: ${{ steps.get_release_name.outputs.tag_exists == 'false' }}
+        with:
+          files: ./dist/*.whl
+          token: ${{ secrets.GITHUB_TOKEN }}
+          generate_release_notes: true
+          prerelease: true
+          tag_name: ${{ steps.get_release_name.outputs.version }}
+          name: ${{ steps.get_release_name.outputs.version }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  
+  build-main:
+    runs-on: ubuntu-latest
+    environment: production
+    if: github.ref == 'refs/heads/main'
+    outputs:
+      version: ${{ steps.get_release_name.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+            python-version: "3.12"
+
+      - name: Install uv
+        run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Install dependencies
+        run: |
+          uv pip install --system build
+          uv pip sync uv.lock
+
+      - name: Build package
+        run: python -m build
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          password: ${{ secrets.PYPI_TOKEN }}
+
+      - name: Get release Name
+        id: get_release_name
+        run: |
+          echo "version=$(python setup.py --version)" >> $GITHUB_OUTPUT
+          if git rev-parse "$(python setup.py --version)" >/dev/null 2>&1; then
+            echo "tag_exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "tag_exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Tag commit
+        if: ${{ steps.get_release_name.outputs.tag_exists == 'false' }} 
+        run: |
+          git tag ${{ steps.get_release_name.outputs.version }}
+          git push origin ${{ steps.get_release_name.outputs.version }}
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        if: ${{ steps.get_release_name.outputs.tag_exists == 'false' }}
+        with:
+          files: ./dist/*.whl
+          token: ${{ secrets.GITHUB_TOKEN }}
+          generate_release_notes: true
+          tag_name: ${{ steps.get_release_name.outputs.version }}
+          name: ${{ steps.get_release_name.outputs.version }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
