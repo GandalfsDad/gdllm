@@ -4,7 +4,6 @@ on:
     branches:
       - develop
       - main
-      - feature/initial-setup
 permissions:
   contents: write
 
@@ -94,9 +93,16 @@ jobs:
         with:
             python-version: "3.12"
 
-      - name: Install dependencies
+      - name: Install uv
         run: |
-          uv pip install --system build
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+        
+      - name: Create virtual environment
+        run: |
+          uv venv -p 3.12
+          source .venv/bin/activate
+          uv sync
 
       - name: Build package
         run: uv build
