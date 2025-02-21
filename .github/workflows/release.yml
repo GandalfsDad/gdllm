@@ -1,0 +1,155 @@
+name: Publish
+on:
+  push:
+    branches:
+      - develop
+      - main
+permissions:
+  contents: write
+
+jobs:
+  build-develop:
+    runs-on: ubuntu-latest
+    environment: test
+    if: github.ref != 'refs/heads/main'
+    outputs:
+      version: ${{ steps.get_release_name.outputs.version }}
+      tag_exists: ${{ steps.get_release_name.outputs.tag_exists }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+            python-version: "3.12"
+
+      - name: Install uv
+        run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+        
+      - name: Create virtual environment
+        run: |
+          uv venv -p 3.12
+          source .venv/bin/activate
+          uv sync
+
+      - name: Build package
+        run: uv build
+
+      - name: Publish to PyPI Test
+        if: github.ref != 'refs/heads/main'
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          skip-existing: true
+          repository-url: https://test.pypi.org/legacy/
+          password: ${{ secrets.PYPI_TEST_TOKEN }}
+          verbose: true
+
+      - name: Get release Name
+        id: get_release_name
+        run: |
+          # Install the package in editable mode to get version
+          uv pip install -e .
+          # Get base version
+          BASE_VERSION=$(uv pip show gdllm | grep Version | cut -d' ' -f2)
+          # For develop branch, append -test
+          if [[ "${{ github.ref }}" != "refs/heads/main" ]]; then
+            # Check for existing test tags and find the next number
+            COUNTER=1
+            while git rev-parse "$BASE_VERSION-test$COUNTER" >/dev/null 2>&1; do
+              COUNTER=$((COUNTER + 1))
+            done
+            VERSION="$BASE_VERSION-test$COUNTER"
+          else
+            VERSION="$BASE_VERSION"
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "tag_exists=false" >> $GITHUB_OUTPUT
+          
+      - name: Tag commit
+        if: ${{ steps.get_release_name.outputs.tag_exists == 'false' }}
+        run: |
+          git tag ${{ steps.get_release_name.outputs.version }}
+          git push origin ${{ steps.get_release_name.outputs.version }}
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        if: ${{ steps.get_release_name.outputs.tag_exists == 'false' }}
+        with:
+          files: ./dist/*.whl
+          token: ${{ secrets.GITHUB_TOKEN }}
+          generate_release_notes: true
+          prerelease: true
+          tag_name: ${{ steps.get_release_name.outputs.version }}
+          name: ${{ steps.get_release_name.outputs.version }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  
+  build-main:
+    runs-on: ubuntu-latest
+    environment: production
+    if: github.ref == 'refs/heads/main'
+    outputs:
+      version: ${{ steps.get_release_name.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+            python-version: "3.12"
+
+      - name: Install uv
+        run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+        
+      - name: Create virtual environment
+        run: |
+          uv venv -p 3.12
+          source .venv/bin/activate
+          uv sync
+
+      - name: Build package
+        run: uv build
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          password: ${{ secrets.PYPI_TOKEN }}
+
+      - name: Get release Name
+        id: get_release_name
+        run: |
+          # Install the package in editable mode to get version
+          uv pip install -e .
+          # Get version
+          VERSION=$(uv pip show gdllm | grep Version | cut -d' ' -f2)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          if git rev-parse "$VERSION" >/dev/null 2>&1; then
+            echo "tag_exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "tag_exists=false" >> $GITHUB_OUTPUT
+
+      - name: Tag commit
+        if: ${{ steps.get_release_name.outputs.tag_exists == 'false' }} 
+        run: |
+          git tag ${{ steps.get_release_name.outputs.version }}
+          git push origin ${{ steps.get_release_name.outputs.version }}
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        if: ${{ steps.get_release_name.outputs.tag_exists == 'false' }}
+        with:
+          files: ./dist/*.whl
+          token: ${{ secrets.GITHUB_TOKEN }}
+          generate_release_notes: true
+          tag_name: ${{ steps.get_release_name.outputs.version }}
+          name: ${{ steps.get_release_name.outputs.version }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
