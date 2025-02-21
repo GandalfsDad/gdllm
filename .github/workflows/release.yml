@@ -46,6 +46,7 @@ jobs:
           skip-existing: true
           repository-url: https://test.pypi.org/legacy/
           password: ${{ secrets.PYPI_TEST_TOKEN }}
+          verbose: true
 
       - name: Get release Name
         id: get_release_name
