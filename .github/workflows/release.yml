@@ -127,21 +127,13 @@ jobs:
         run: |
           # Install the package in editable mode to get version
           uv pip install -e .
-          # Get base version
-          BASE_VERSION=$(uv pip show gdllm | grep Version | cut -d' ' -f2)
-          # For develop branch, append -test
-          if [[ "${{ github.ref }}" != "refs/heads/main" ]]; then
-            # Check for existing test tags and find the next number
-            COUNTER=1
-            while git rev-parse "$BASE_VERSION-test$COUNTER" >/dev/null 2>&1; do
-              COUNTER=$((COUNTER + 1))
-            done
-            VERSION="$BASE_VERSION-test$COUNTER"
-          else
-            VERSION="$BASE_VERSION"
-          fi
+          # Get version
+          VERSION=$(uv pip show gdllm | grep Version | cut -d' ' -f2)
           echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "tag_exists=false" >> $GITHUB_OUTPUT
+          if git rev-parse "$VERSION" >/dev/null 2>&1; then
+            echo "tag_exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "tag_exists=false" >> $GITHUB_OUTPUT
 
       - name: Tag commit
         if: ${{ steps.get_release_name.outputs.tag_exists == 'false' }} 
