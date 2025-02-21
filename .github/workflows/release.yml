@@ -135,6 +135,7 @@ jobs:
             echo "tag_exists=true" >> $GITHUB_OUTPUT
           else
             echo "tag_exists=false" >> $GITHUB_OUTPUT
+          fi
 
       - name: Tag commit
         if: ${{ steps.get_release_name.outputs.tag_exists == 'false' }} 
