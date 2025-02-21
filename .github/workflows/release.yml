@@ -47,9 +47,11 @@ jobs:
       - name: Get release Name
         id: get_release_name
         run: |
-          git fetch --tags
-          echo "version=$(python setup.py --version)-test" >> $GITHUB_OUTPUT
-          if git rev-parse "$(python setup.py --version)-test" >/dev/null 2>&1; then
+          # Install the package in editable mode to get version
+          uv pip install -e .
+          # Get version and append -test
+          echo "version=$(uv pip show gdllm | grep Version | cut -d' ' -f2)-test" >> $GITHUB_OUTPUT
+          if git rev-parse "$(uv pip show gdllm | grep Version | cut -d' ' -f2)-test" >/dev/null 2>&1; then
             echo "tag_exists=true" >> $GITHUB_OUTPUT
             echo "The tag exists"
           else
@@ -90,18 +92,12 @@ jobs:
         with:
             python-version: "3.12"
 
-      - name: Install uv
-        run: |
-          curl -LsSf https://astral.sh/uv/install.sh | sh
-          echo "$HOME/.local/bin" >> $GITHUB_PATH
-
       - name: Install dependencies
         run: |
           uv pip install --system build
-          uv pip sync uv.lock
 
       - name: Build package
-        run: python -m build
+        run: uv build
 
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
@@ -111,8 +107,11 @@ jobs:
       - name: Get release Name
         id: get_release_name
         run: |
-          echo "version=$(python setup.py --version)" >> $GITHUB_OUTPUT
-          if git rev-parse "$(python setup.py --version)" >/dev/null 2>&1; then
+          # Install the package in editable mode to get version
+          uv pip install -e .
+          # Get version using uv pip show
+          echo "version=$(uv pip show gdllm | grep Version | cut -d' ' -f2)" >> $GITHUB_OUTPUT
+          if git rev-parse "$(uv pip show gdllm | grep Version | cut -d' ' -f2)" >/dev/null 2>&1; then
             echo "tag_exists=true" >> $GITHUB_OUTPUT
           else
             echo "tag_exists=false" >> $GITHUB_OUTPUT
