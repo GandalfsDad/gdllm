@@ -1,6 +1,6 @@
 from ...abstract import AbstractLLM, AbstractMessage, AbstractToolUser, AbstractTokenCounter
-from .config import AnthropicConfig
-from .message import AbstractAnthropicMessage, AnthropicResponse, AnthropicMessage, AnthropicToolResponse, AnthropicToolResultResponse
+from .config import AnthropicConfig, AnthropicReasoningConfig
+from .message import AbstractAnthropicMessage, AnthropicResponse, AnthropicMessage, AnthropicToolResponse, AnthropicToolResultResponse, AnthropicReasoningResponse
 from .tool import AnthropicToolProvider
 
 import json
@@ -38,6 +38,8 @@ class Anthropic(AbstractLLM, AbstractToolUser, AbstractTokenCounter):
     def process_response(self, response: Any) -> AbstractAnthropicMessage:
         if response.stop_reason=='tool_use':
             return AnthropicToolResponse(response)
+        elif self.config is AnthropicReasoningConfig:
+            return AnthropicReasoningResponse(response)
         else:
             return AnthropicResponse(response.content[0])
     

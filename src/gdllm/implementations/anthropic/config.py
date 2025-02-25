@@ -29,3 +29,22 @@ class AnthropicGPTConfig(AnthropicConfig):
             args["tools"] =  AnthropicToolProvider.parse_tools(self.tools)
         
         return args
+    
+class AnthropicReasoningConfig(AnthropicConfig):
+    max_tokens: int = 2046 # Must be larger than thinking_budget
+    thinking_enabled: bool = True
+    thinking_budget: int = 1024
+
+    def get_call_args(self) -> dict:
+        args = {
+            "max_tokens": self.max_tokens,
+            "thinking" : {
+                "type": "enabled" if self.thinking_enabled else "disabled",
+                **({"budget_tokens": self.thinking_budget} if self.thinking_enabled else {})
+            }
+        }
+
+        if self.tools:
+            args["tools"] =  AnthropicToolProvider.parse_tools(self.tools)
+        
+        return args
