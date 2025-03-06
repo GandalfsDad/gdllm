@@ -1,7 +1,7 @@
 from ...abstract import AbstractConfig
 from .tool import GoogleToolProvider
 
-from typing import List
+from typing import List, Optional
 from abc import ABC, abstractmethod
 
 class GoogleConfig(AbstractConfig, ABC):
@@ -9,6 +9,7 @@ class GoogleConfig(AbstractConfig, ABC):
     api_key: str
     model: str
     tools: List[str] = []
+    system_message: Optional[str] = None
 
     @abstractmethod
     def get_call_args(self) -> dict:
@@ -36,6 +37,9 @@ class GoogleGPTConfig(GoogleConfig):
         if self.tools:
             args["tools"]= GoogleToolProvider.parse_tools(self.tools)
             args["automatic_function_calling"]= {"disable": True, "maximum_remote_calls": 0}
+        
+        if self.system_message:
+            args["system_instruction"]= self.system_message
 
         return args
     
@@ -48,10 +52,16 @@ class GoogleGPTConfig(GoogleConfig):
 class GoogleReasoningConfig(GoogleConfig):
 
     def get_call_args(self) -> dict:
+        args = {}
+
         if self.tools:
-            return {
-                "automatic_function_calling": {"disable": True, "maximum_remote_calls": 0}
-            }
+            args["automatic_function_calling"] = {"disable": True, "maximum_remote_calls": 0}
+
+        if self.system_message:
+            args["system_instruction"]= self.system_message
+
+        return args
+            
         
     def tool_use_available(self) -> bool:
         return False

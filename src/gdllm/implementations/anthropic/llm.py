@@ -27,6 +27,7 @@ class Anthropic(AbstractLLM, AbstractToolUser, AbstractTokenCounter):
 
         response = self.client.messages.create(
             model=self.config.model,
+            **({"system": self.config.system_message} if self.config.system_message else {}),
             messages=parsed_messages,
             **self.config.get_call_args()
         )

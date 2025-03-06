@@ -44,6 +44,9 @@ class DeepSeek(AbstractLLM, AbstractToolUser, AbstractTokenCounter):
     def format_user_message(self, message: str) -> Any:
         return DeepSeekMessage(role= "user", message= message)
     
+    def format_system_message(self, message: str) -> Any:
+        return DeepSeekMessage(role= self.config.system_name, message= message)
+    
     def process_tool_calls(self, tool_call_response: DeepSeekToolResponse) -> List[DeepSeekToolResultResponse]:
         results = []
         for tool_call in tool_call_response.response.message.tool_calls:

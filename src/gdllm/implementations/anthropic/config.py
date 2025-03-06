@@ -1,7 +1,7 @@
 from ...abstract import AbstractConfig
 from .tool import AnthropicToolProvider
 
-from typing import List
+from typing import List, Optional
 from abc import ABC, abstractmethod
 
 class AnthropicConfig(AbstractConfig, ABC):
@@ -9,6 +9,7 @@ class AnthropicConfig(AbstractConfig, ABC):
     api_key: str
     model: str
     tools: List[str] = []
+    system_message: Optional[str] = None
 
     @abstractmethod
     def get_call_args(self) -> dict:
