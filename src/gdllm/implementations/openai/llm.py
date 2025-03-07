@@ -4,7 +4,7 @@ from .message import AbstractOpenAIMessage, OpenAIToolResponse, OpenAIResponse, 
 from .tool import OpenAIToolProvider
 
 import json
-from typing import List, TypeVar, Any
+from typing import List, TypeVar, Any, Optional
 
 from openai import OpenAI as BaseOpenAI
 
@@ -41,9 +41,15 @@ class OpenAI(AbstractLLM, AbstractToolUser, AbstractStructuredOutputer, Abstract
             return OpenAIToolResponse(response)
         else:
             return OpenAIResponse(response)
+        
+    def new_conversation(self) -> List[AbstractOpenAIMessage]:
+        return [self.format_system_message(self.config.system_message)] if self.config.system_message else []
 
     def format_user_message(self, message: str) -> AbstractMessage:
         return OpenAIMessage(message, "user")
+    
+    def format_system_message(self, message: str) -> AbstractMessage:
+        return OpenAIMessage(message, self.config.system_name)
 
     def process_tool_calls(self, tool_call_response: OpenAIToolResponse) -> List[OpenAIToolResultResponse]:
         results = []
@@ -57,10 +63,22 @@ class OpenAI(AbstractLLM, AbstractToolUser, AbstractStructuredOutputer, Abstract
     def check_tool_use(self, message: AbstractMessage) -> bool:
         return type(message) is OpenAIToolResponse
 
-    def structured_output(self, message: str, output_type: T) -> T:
+    def structured_output(self, message: str, output_type: T, system_message_override: Optional[str] = None) -> T:
+        messages = []
+        if system_message_override:
+            messages.append(self.format_system_message(system_message_override))
+        elif self.config.system_message:
+            messages.append(self.format_system_message(self.config.system_message))
+        else:
+            pass
+
+        messages.append(self.format_user_message(message))
+
+        parsed_messages = [message.to_chat_message() for message in messages]
+
         structured_response = self.client.beta.chat.completions.parse(
             model = self.config.model,
-            messages = [self.format_user_message(message).to_chat_message()],
+            messages = parsed_messages,
             response_format=output_type,
             **self.config.get_call_args()
         )

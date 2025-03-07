@@ -1,7 +1,7 @@
 from ...abstract import AbstractConfig
 from .tool import DeepSeekToolProvider
 
-from typing import List
+from typing import List, Optional
 from abc import ABC, abstractmethod
 
 class DeepSeekConfig(AbstractConfig, ABC):
@@ -10,6 +10,8 @@ class DeepSeekConfig(AbstractConfig, ABC):
     api_key: str
     model: str
     tools: List[str] = []
+    system_message: Optional[str] = None
+    system_name: Optional[str] = None
 
     @abstractmethod
     def get_call_args(self) -> dict:
@@ -19,6 +21,7 @@ class DeepSeekConfig(AbstractConfig, ABC):
 class DeepSeekGPTConfig(DeepSeekConfig):
     temperature: float = 0.7
     max_tokens: int = 1024
+    system_name: Optional[str] = 'system'
 
     def get_call_args(self) -> dict:
         args = {
@@ -30,7 +33,8 @@ class DeepSeekGPTConfig(DeepSeekConfig):
         return args
 
 class DeepSeekReasoningConfig(DeepSeekConfig):
+    system_name: Optional[str] = 'system'
 
     def get_call_args(self) -> dict:
-        return {
-        }
+        args = {}
+        return args

@@ -1,7 +1,7 @@
 from ...abstract import AbstractConfig
 from .tool import OpenAIToolProvider
 
-from typing import List
+from typing import List, Optional
 from abc import ABC, abstractmethod
 
 class OpenAIConfig(AbstractConfig, ABC):
@@ -10,6 +10,8 @@ class OpenAIConfig(AbstractConfig, ABC):
     api_key: str
     model: str
     tools: List[str] = []
+    system_message: Optional[str] = None
+    system_name: str = 'system'
 
     @abstractmethod
     def get_call_args(self) -> dict:
@@ -19,6 +21,7 @@ class OpenAIConfig(AbstractConfig, ABC):
 class OpenAIGPTConfig(OpenAIConfig):
     temperature: float = 0.7
     max_tokens: int = 1024
+    system_name: str = 'system'
 
     def get_call_args(self) -> dict:
         args = {
@@ -33,6 +36,7 @@ class OpenAIGPTConfig(OpenAIConfig):
     
 class OpenAIReasoningConfig(OpenAIConfig):
     reasoning_effort: str = 'medium'
+    system_name: str = 'developer'
 
     def get_call_args(self) -> dict:
         args = {

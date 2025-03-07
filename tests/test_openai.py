@@ -166,8 +166,9 @@ class TestOpenAILLM(unittest.TestCase):
             age: int
         
         mock_parsed = TestOutput(name="Test", age=25)
-        fake_choice = MagicMock(parsed=mock_parsed)
-        fake_response = MagicMock(choices=[fake_choice])
+        fake_message = MagicMock(parsed=mock_parsed)
+        fake_choice = MagicMock(message=fake_message)
+        fake_response = MagicMock(choices=[fake_choice], usage=MagicMock(prompt_tokens=0, completion_tokens=0))
 
         # Patch the 'parse' method on the completions attribute of your client
         with patch.object(self.llm.client.beta.chat.completions, 'parse', return_value=fake_response) as mock_parse:
