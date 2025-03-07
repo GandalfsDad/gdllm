@@ -15,6 +15,10 @@ class AbstractLLM(ABC):
     def format_user_message(self, message: str) -> AbstractMessage:
         pass
 
+    @abstractmethod
+    def new_conversation(self) -> List[AbstractMessage]:
+        pass
+
 class AbstractToolUser(ABC):
     @abstractmethod
     def process_tool_calls(self, tool_call_response: AbstractMessage) -> List[AbstractMessage]:

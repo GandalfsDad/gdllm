@@ -1,6 +1,6 @@
 from ...abstract import AbstractLLM, AbstractMessage, AbstractToolUser, AbstractTokenCounter
-from .config import AnthropicConfig
-from .message import AbstractAnthropicMessage, AnthropicResponse, AnthropicMessage, AnthropicToolResponse, AnthropicToolResultResponse
+from .config import AnthropicConfig, AnthropicReasoningConfig
+from .message import AbstractAnthropicMessage, AnthropicResponse, AnthropicMessage, AnthropicToolResponse, AnthropicToolResultResponse, AnthropicReasoningResponse
 from .tool import AnthropicToolProvider
 
 import json
@@ -27,6 +27,7 @@ class Anthropic(AbstractLLM, AbstractToolUser, AbstractTokenCounter):
 
         response = self.client.messages.create(
             model=self.config.model,
+            **({"system": self.config.system_message} if self.config.system_message else {}),
             messages=parsed_messages,
             **self.config.get_call_args()
         )
@@ -38,8 +39,13 @@ class Anthropic(AbstractLLM, AbstractToolUser, AbstractTokenCounter):
     def process_response(self, response: Any) -> AbstractAnthropicMessage:
         if response.stop_reason=='tool_use':
             return AnthropicToolResponse(response)
+        elif self.config is AnthropicReasoningConfig:
+            return AnthropicReasoningResponse(response)
         else:
             return AnthropicResponse(response.content[0])
+        
+    def new_conversation(self) -> List[AbstractAnthropicMessage]:
+        return []
     
     def format_user_message(self, message: str) -> Any:
         return AnthropicMessage(role="user", message= message)
