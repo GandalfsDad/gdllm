@@ -39,7 +39,7 @@ class Anthropic(AbstractLLM, AbstractToolUser, AbstractTokenCounter):
     def process_response(self, response: Any) -> AbstractAnthropicMessage:
         if response.stop_reason=='tool_use':
             return AnthropicToolResponse(response)
-        elif self.config is AnthropicReasoningConfig:
+        elif isinstance(self.config, AnthropicReasoningConfig):
             return AnthropicReasoningResponse(response)
         else:
             return AnthropicResponse(response.content[0])
