@@ -43,6 +43,9 @@ class Anthropic(AbstractLLM, AbstractToolUser, AbstractTokenCounter):
             return AnthropicReasoningResponse(response)
         else:
             return AnthropicResponse(response.content[0])
+        
+    def new_conversation(self) -> List[AbstractAnthropicMessage]:
+        return []
     
     def format_user_message(self, message: str) -> Any:
         return AnthropicMessage(role="user", message= message)

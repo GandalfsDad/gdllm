@@ -40,6 +40,9 @@ class Google(AbstractLLM, AbstractToolUser, AbstractStructuredOutputer, Abstract
             return GoogleToolResponse(response)
         else:
             return GoogleResponse(response)
+        
+    def new_conversation(self) -> List[AbstractGoogleMessage]:
+        return []
     
     def format_user_message(self, message: str) -> GoogleMessage:
         return GoogleMessage(role='user', message=message)

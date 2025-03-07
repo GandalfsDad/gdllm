@@ -40,6 +40,9 @@ class DeepSeek(AbstractLLM, AbstractToolUser, AbstractTokenCounter):
             return DeepSeekToolResponse(response)
         else:
             return DeepSeekResponse(response)
+        
+    def new_conversation(self) -> List[AbstractDeepSeekMessage]:
+        return [self.format_system_message(self.config.system_message)] if self.config.system_message else []
     
     def format_user_message(self, message: str) -> Any:
         return DeepSeekMessage(role= "user", message= message)

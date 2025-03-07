@@ -41,6 +41,9 @@ class OpenAI(AbstractLLM, AbstractToolUser, AbstractStructuredOutputer, Abstract
             return OpenAIToolResponse(response)
         else:
             return OpenAIResponse(response)
+        
+    def new_conversation(self) -> List[AbstractOpenAIMessage]:
+        return [self.format_system_message(self.config.system_message)] if self.config.system_message else []
 
     def format_user_message(self, message: str) -> AbstractMessage:
         return OpenAIMessage(message, "user")
