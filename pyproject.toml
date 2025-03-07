@@ -1,6 +1,6 @@
 [project]
 name = "gdllm"
-version = "0.2.0a0"
+version = "0.2.0"
 description = "TBC"
 readme = "README.md"
 authors = [
